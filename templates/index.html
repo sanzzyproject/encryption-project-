@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CipherLab | Secure Encryption Tool</title>
+    <style>
+        :root {
+            --bg-color: #f5f6f8;
+            --card-bg: #2e2e2e;
+            --card-border: #3a3a3a;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent: #4da6ff; /* Soft Blue */
+            --accent-hover: #3a8ccf;
+            --input-bg: #1a1a1a;
+            --danger: #ff5f5f;
+            --success: #00cc66;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 { font-size: 1.8rem; color: #222; font-weight: 800; letter-spacing: -0.5px; }
+        header p { color: #666; font-size: 0.95rem; margin-top: 5px; }
+
+        /* Card Styling */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            color: var(--text-main);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+        
+        select, input {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.2s;
+        }
+        select:focus, input:focus, textarea:focus { border-color: var(--accent); }
+
+        /* Full width for password on mobile if needed, but grid handles it */
+        
+        .io-area { display: flex; flex-direction: column; gap: 20px; }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+        }
+
+        button:active { transform: scale(0.98); }
+
+        .btn-encrypt { background-color: var(--accent); color: white; }
+        .btn-encrypt:hover { background-color: var(--accent-hover); }
+
+        .btn-decrypt { background-color: transparent; border: 1px solid var(--text-muted); color: var(--text-main); }
+        .btn-decrypt:hover { background-color: rgba(255,255,255,0.1); }
+
+        .btn-copy { 
+            flex: 0; 
+            min-width: 50px; 
+            background: #444; 
+            color: white;
+        }
+
+        .status-bar {
+            margin-top: 15px;
+            min-height: 24px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .error { color: var(--danger); }
+        .success { color: var(--success); }
+
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+            .controls { grid-template-columns: 1fr; }
+            .card { padding: 1.5rem; }
+            button { font-size: 1rem; }
+            header h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>CipherLab</h1>
+        <p>Enkripsi Profesional & Aman</p>
+    </header>
+
+    <div class="card">
+        <div class="controls">
+            <div class="form-group">
+                <label>Metode Enkripsi</label>
+                <select id="method">
+                    <option value="AES">AES-256 (Paling Aman)</option>
+                    <option value="Base64">Base64</option>
+                    <option value="XOR">XOR Cipher</option>
+                    <option value="ROT13">ROT13</option>
+                </select>
+            </div>
+            <div class="form-group" id="pass-group">
+                <label>Password / Kunci</label>
+                <input type="password" id="password" placeholder="Rahasia123">
+            </div>
+        </div>
+
+        <div class="io-area">
+            <div class="form-group">
+                <label>Input Text</label>
+                <textarea id="input" placeholder="Ketik atau tempel teks/kode di sini..."></textarea>
+            </div>
+            
+            <div class="actions">
+                <button class="btn-encrypt" onclick="process('encrypt')">
+                    🔒 Encrypt
+                </button>
+                <button class="btn-decrypt" onclick="process('decrypt')">
+                    🔓 Decrypt
+                </button>
+            </div>
+
+            <div class="status-bar" id="status"></div>
+
+            <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label>Output Result</label>
+                    <button class="btn-copy" onclick="copyResult()" title="Copy">📋</button>
+                </div>
+                <textarea id="output" readonly placeholder="Hasil akan muncul di sini..."></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // UI Logic: Sembunyikan field password jika tidak diperlukan
+    const methodSelect = document.getElementById('method');
+    const passGroup = document.getElementById('pass-group');
+
+    methodSelect.addEventListener('change', () => {
+        const val = methodSelect.value;
+        if (val === 'Base64' || val === 'ROT13') {
+            passGroup.style.opacity = '0.3';
+            passGroup.style.pointerEvents = 'none';
+            document.getElementById('password').value = '';
+        } else {
+            passGroup.style.opacity = '1';
+            passGroup.style.pointerEvents = 'auto';
+        }
+    });
+
+    async function process(action) {
+        const input = document.getElementById('input').value;
+        const password = document.getElementById('password').value;
+        const method = document.getElementById('method').value;
+        const statusEl = document.getElementById('status');
+        const outputEl = document.getElementById('output');
+
+        if (!input) {
+            statusEl.innerHTML = '<span class="error">Mohon isi input text terlebih dahulu.</span>';
+            return;
+        }
+
+        statusEl.innerHTML = 'Processing...';
+        outputEl.value = '';
+
+        try {
+            const response = await fetch('/api/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ method, text: input, password, action })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                outputEl.value = data.result;
+                statusEl.innerHTML = '<span class="success">Berhasil!</span>';
+                
+                // Auto focus ke output untuk UX
+                outputEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                statusEl.innerHTML = `<span class="error">${data.error}</span>`;
+            }
+
+        } catch (err) {
+            statusEl.innerHTML = '<span class="error">Terjadi kesalahan koneksi server.</span>';
+        }
+    }
+
+    function copyResult() {
+        const output = document.getElementById('output');
+        if (!output.value) return;
+        
+        output.select();
+        document.execCommand('copy');
+        
+        const originalText = document.querySelector('.btn-copy').innerHTML;
+        document.querySelector('.btn-copy').innerHTML = '✅';
+        setTimeout(() => {
+            document.querySelector('.btn-copy').innerHTML = originalText;
+        }, 1500);
+    }
+</script>
+
+</body>
+</html>
